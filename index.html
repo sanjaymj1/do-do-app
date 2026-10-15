@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f4ef">
+  <title>Daymark - To-do list</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --paper: #f5f4ef;
+      --surface: #fffefa;
+      --ink: #20241f;
+      --muted: #747970;
+      --line: #e4e4dc;
+      --green: #356b4b;
+      --green-dark: #244d36;
+      --green-pale: #e8f0e8;
+      --orange: #bd572f;
+      --orange-pale: #fbede5;
+      --serif: Georgia, "Times New Roman", serif;
+      --sans: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background-color: var(--paper);
+      background-image: radial-gradient(#d8d8cc 0.65px, transparent 0.65px);
+      background-size: 15px 15px;
+      font-family: var(--sans);
+    }
+
+    button, input { font: inherit; }
+    button { color: inherit; }
+
+    .shell {
+      width: min(100% - 40px, 1060px);
+      margin: 0 auto;
+      padding: 27px 0 64px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      padding-bottom: 25px;
+      border-bottom: 1px solid #dcded5;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: var(--serif);
+      font-size: 21px;
+      font-weight: 700;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 29px;
+      height: 29px;
+      place-items: center;
+      border-radius: 9px;
+      color: white;
+      background: var(--green);
+    }
+
+    .brand-mark svg { width: 17px; height: 17px; }
+
+    .notify-button {
+      display: inline-flex;
+      min-height: 40px;
+      align-items: center;
+      gap: 8px;
+      padding: 0 13px;
+      border: 1px solid #d7d9d0;
+      border-radius: 7px;
+      background: var(--surface);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 650;
+      transition: background 150ms ease, border-color 150ms ease;
+    }
+
+    .notify-button:hover { border-color: var(--green); background: #f7faf5; }
+    .notify-button svg { width: 16px; height: 16px; color: var(--green); }
+
+    main { padding-top: 51px; }
+
+    .intro {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 30px;
+    }
+
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--green);
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: var(--serif);
+      font-size: clamp(34px, 5vw, 48px);
+      font-weight: 500;
+      line-height: 1.08;
+    }
+
+    .date-label { margin: 11px 0 0; color: var(--muted); font-size: 14px; }
+
+    .progress {
+      min-width: 165px;
+      padding-bottom: 4px;
+    }
+
+    .progress-copy {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 9px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .progress-copy strong { color: var(--ink); font-weight: 700; }
+
+    .progress-track {
+      height: 5px;
+      overflow: hidden;
+      border-radius: 9px;
+      background: #dedfd7;
+    }
+
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--green);
+      transition: width 220ms ease;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 290px;
+      align-items: start;
+      gap: 28px;
+    }
+
+    .list-panel, .side-panel {
+      border: 1px solid var(--line);
+      border-radius: 9px;
+      background: var(--surface);
+      box-shadow: 0 4px 18px #343b2a08;
+    }
+
+    .list-panel { overflow: hidden; }
+
+    .add-form {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 9px;
+      padding: 17px;
+      border-bottom: 1px solid var(--line);
+      background: #fbfbf7;
+    }
+
+    .add-input {
+      width: 100%;
+      min-width: 0;
+      height: 43px;
+      padding: 0 13px;
+      border: 1px solid #dedfd6;
+      border-radius: 6px;
+      outline: none;
+      background: white;
+      font-size: 14px;
+    }
+
+    .add-input:focus, .due-input:focus { border-color: var(--green); box-shadow: 0 0 0 3px #356b4b18; }
+    .add-input::placeholder { color: #989b92; }
+
+    .add-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      min-width: 99px;
+      height: 43px;
+      padding: 0 14px;
+      border: 0;
+      border-radius: 6px;
+      color: white;
+      background: var(--green);
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 700;
+      transition: background 150ms ease, transform 150ms ease;
+    }
+
+    .add-button:hover { background: var(--green-dark); }
+    .add-button:active { transform: translateY(1px); }
+    .add-button svg { width: 16px; height: 16px; }
+
+    .filters {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 13px 17px 11px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .filter-button {
+      min-height: 31px;
+      padding: 0 11px;
+      border: 0;
+      border-radius: 5px;
+      color: var(--muted);
+      background: transparent;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 650;
+    }
+
+    .filter-button[aria-pressed="true"] { color: var(--green-dark); background: var(--green-pale); }
+
+    .task-list { margin: 0; padding: 0; list-style: none; }
+
+    .task-row {
+      display: grid;
+      grid-template-columns: 20px minmax(0, 1fr) auto 30px;
+      align-items: center;
+      gap: 12px;
+      min-height: 68px;
+      padding: 12px 17px;
+      border-bottom: 1px solid #edeee7;
+      animation: arrive 220ms ease both;
+    }
+
+    .task-row:last-child { border-bottom: 0; }
+
+    .task-check {
+      display: grid;
+      width: 20px;
+      height: 20px;
+      place-items: center;
+      padding: 0;
+      border: 1.5px solid #b9bdb2;
+      border-radius: 50%;
+      color: white;
+      background: transparent;
+      cursor: pointer;
+      transition: background 140ms ease, border-color 140ms ease;
+    }
+
+    .task-check:hover { border-color: var(--green); }
+    .task-check svg { width: 12px; height: 12px; opacity: 0; }
+    .task-row.is-done .task-check { border-color: var(--green); background: var(--green); }
+    .task-row.is-done .task-check svg { opacity: 1; }
+
+    .task-copy { min-width: 0; }
+
+    .task-title {
+      overflow-wrap: anywhere;
+      font-size: 14px;
+      line-height: 1.4;
+    }
+
+    .task-row.is-done .task-title { color: #92968d; text-decoration: line-through; }
+
+    .task-due {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .task-due.is-soon, .task-due.is-overdue { color: var(--orange); font-weight: 700; }
+
+    .priority {
+      padding: 4px 7px;
+      border-radius: 4px;
+      color: var(--green-dark);
+      background: var(--green-pale);
+      font-size: 10px;
+      font-weight: 700;
+    }
+
+    .priority.high { color: #9c482b; background: var(--orange-pale); }
+
+    .delete-button {
+      display: grid;
+      width: 30px;
+      height: 30px;
+      place-items: center;
+      padding: 0;
+      border: 0;
+      border-radius: 5px;
+      color: #95998f;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .delete-button:hover { color: var(--orange); background: var(--orange-pale); }
+    .delete-button svg { width: 16px; height: 16px; }
+
+    .empty-state {
+      padding: 43px 20px 48px;
+      text-align: center;
+    }
+
+    .empty-mark {
+      display: grid;
+      width: 44px;
+      height: 44px;
+      margin: 0 auto 13px;
+      place-items: center;
+      border-radius: 13px;
+      color: var(--green);
+      background: var(--green-pale);
+    }
+
+    .empty-mark svg { width: 21px; height: 21px; }
+    .empty-state h2 { margin: 0; font-family: var(--serif); font-size: 20px; font-weight: 500; }
+    .empty-state p { margin: 7px 0 0; color: var(--muted); font-size: 13px; }
+
+    .side-panel { padding: 20px; }
+
+    .side-heading {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 18px;
+      font-family: var(--serif);
+      font-size: 18px;
+      font-weight: 500;
+    }
+
+    .side-heading svg { width: 18px; height: 18px; color: var(--green); }
+
+    .due-label {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .due-input {
+      width: 100%;
+      min-height: 41px;
+      padding: 0 9px;
+      border: 1px solid #dedfd6;
+      border-radius: 6px;
+      outline: none;
+      background: white;
+      color: var(--ink);
+      font-size: 12px;
+    }
+
+    .priority-label { margin: 18px 0 9px; color: var(--muted); font-size: 11px; font-weight: 700; }
+
+    .priority-options { display: flex; gap: 7px; }
+
+    .priority-option {
+      flex: 1;
+      min-height: 34px;
+      padding: 0 8px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      color: var(--muted);
+      background: white;
+      cursor: pointer;
+      font-size: 11px;
+      font-weight: 650;
+    }
+
+    .priority-option[aria-pressed="true"] { border-color: #a8c0aa; color: var(--green-dark); background: var(--green-pale); }
+    .priority-option[data-priority="high"][aria-pressed="true"] { border-color: #e2b9a5; color: #9c482b; background: var(--orange-pale); }
+
+    .reminder-note {
+      display: flex;
+      gap: 9px;
+      margin-top: 19px;
+      padding: 11px;
+      border-radius: 6px;
+      color: #76533d;
+      background: #f8f1e8;
+      font-size: 11px;
+      line-height: 1.5;
+    }
+
+    .reminder-note svg { width: 15px; height: 15px; flex: 0 0 auto; margin-top: 1px; }
+
+    .alert-banner {
+      display: none;
+      align-items: flex-start;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding: 12px 15px;
+      border: 1px solid #e7c3ad;
+      border-radius: 7px;
+      color: #914521;
+      background: #fff5ed;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .alert-banner.is-visible { display: flex; }
+    .alert-banner svg { width: 17px; height: 17px; flex: 0 0 auto; margin-top: 1px; }
+    .alert-banner strong { font-weight: 750; }
+
+    .toast {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 3;
+      max-width: min(350px, calc(100vw - 40px));
+      padding: 12px 16px;
+      border-radius: 7px;
+      color: white;
+      background: #26392d;
+      box-shadow: 0 8px 28px #20241f24;
+      font-size: 13px;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(8px);
+      transition: opacity 160ms ease, transform 160ms ease;
+    }
+
+    .toast.is-visible { opacity: 1; transform: translateY(0); }
+
+    @keyframes arrive {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 720px) {
+      .shell { width: min(100% - 30px, 560px); padding-top: 18px; }
+      main { padding-top: 35px; }
+      .layout { grid-template-columns: 1fr; gap: 15px; }
+      .side-panel { order: -1; }
+      .side-panel form { display: grid; grid-template-columns: minmax(0, 1fr) 150px; column-gap: 15px; align-items: end; }
+      .side-heading { grid-column: 1 / -1; margin-bottom: 14px; }
+      .priority-label { grid-column: 1 / -1; margin-top: 13px; }
+      .priority-options { grid-column: 1 / -1; }
+      .reminder-note { grid-column: 1 / -1; margin-top: 13px; }
+    }
+
+    @media (max-width: 460px) {
+      .shell { width: calc(100% - 24px); }
+      .topbar { padding-bottom: 17px; }
+      .brand { font-size: 19px; }
+      .notify-button { min-height: 38px; padding: 0 9px; font-size: 11px; }
+      .intro { align-items: start; flex-direction: column; gap: 18px; margin-bottom: 20px; }
+      .progress { width: 100%; }
+      .side-panel form { grid-template-columns: 1fr; }
+      .due-field { margin-top: 13px; }
+      .task-row { grid-template-columns: 20px minmax(0, 1fr) 28px; gap: 9px; padding: 12px; }
+      .task-row .priority { display: none; }
+      .add-form { padding: 12px; }
+      .add-button { min-width: 44px; padding: 0 12px; }
+      .add-button span { display: none; }
+      .filters { padding-right: 11px; padding-left: 11px; }
+      .filter-button { padding: 0 9px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>
+        </span>
+        Daymark
+      </div>
+      <button class="notify-button" id="notificationButton" type="button">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+        <span id="notificationLabel">Turn on reminders</span>
+      </button>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="pageTitle">
+        <div>
+          <p class="eyebrow">A little more room to think</p>
+          <h1 id="pageTitle">Your day, in view.</h1>
+          <p class="date-label" id="todayLabel"></p>
+        </div>
+        <div class="progress" aria-label="Today's progress">
+          <div class="progress-copy"><span>Today's progress</span><strong id="progressText">0 of 0</strong></div>
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+      </section>
+
+      <div class="alert-banner" id="alertBanner" role="status" aria-live="polite">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.3 3.9 2.5 17.4A2 2 0 0 0 4.2 20h15.6a2 2 0 0 0 1.7-2.6L13.7 3.9a2 2 0 0 0-3.4 0Z"/><path d="M12 9v4m0 3h.01"/></svg>
+        <div id="alertText"></div>
+      </div>
+
+      <div class="layout">
+        <section class="list-panel" aria-label="Tasks">
+          <form class="add-form" id="taskForm">
+            <input class="add-input" id="taskInput" name="task" maxlength="160" placeholder="What needs doing?" autocomplete="off" aria-label="Task name" required>
+            <button class="add-button" type="submit">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+              <span>Add task</span>
+            </button>
+          </form>
+          <nav class="filters" aria-label="Filter tasks">
+            <button class="filter-button" type="button" data-filter="all" aria-pressed="true">All</button>
+            <button class="filter-button" type="button" data-filter="active" aria-pressed="false">Active</button>
+            <button class="filter-button" type="button" data-filter="done" aria-pressed="false">Completed</button>
+          </nav>
+          <ul class="task-list" id="taskList"></ul>
+          <div class="empty-state" id="emptyState" hidden>
+            <div class="empty-mark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></div>
+            <h2 id="emptyTitle">A fresh page.</h2>
+            <p id="emptyMessage">Add a task and make a little progress.</p>
+          </div>
+        </section>
+
+        <aside class="side-panel" aria-labelledby="newTaskHeading">
+          <h2 class="side-heading" id="newTaskHeading">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+            New task details
+          </h2>
+          <form id="taskDetailsForm">
+            <div>
+              <label class="due-label" for="dueInput">Deadline <span>(optional)</span></label>
+              <input class="due-input" id="dueInput" type="datetime-local">
+            </div>
+            <div class="due-field">
+              <label class="due-label" for="priorityOptions">Priority</label>
+              <div class="priority-options" id="priorityOptions" role="group" aria-label="Task priority">
+                <button class="priority-option" type="button" data-priority="low" aria-pressed="false">Low</button>
+                <button class="priority-option" type="button" data-priority="normal" aria-pressed="true">Normal</button>
+                <button class="priority-option" type="button" data-priority="high" aria-pressed="false">High</button>
+              </div>
+            </div>
+            <p class="priority-label">Reminders</p>
+            <div class="reminder-note">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              <span>We’ll flag tasks due within 24 hours. Turn on browser reminders to get a notification while Daymark is open.</span>
+            </div>
+          </form>
+        </aside>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    (() => {
+      const STORAGE_KEY = "daymark.tasks.v1";
+      const ALERTED_KEY = "daymark.alerted.v1";
+      const NEAR_DEADLINE_MS = 24 * 60 * 60 * 1000;
+      const taskForm = document.getElementById("taskForm");
+      const taskInput = document.getElementById("taskInput");
+      const dueInput = document.getElementById("dueInput");
+      const taskList = document.getElementById("taskList");
+      const emptyState = document.getElementById("emptyState");
+      const notificationButton = document.getElementById("notificationButton");
+      let tasks = loadTasks();
+      let filter = "all";
+      let priority = "normal";
+      let toastTimer;
+
+      function loadTasks() {
+        try {
+          const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+          return Array.isArray(stored) ? stored.filter(task => task && typeof task.id === "string" && typeof task.title === "string") : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function saveTasks() {
+        try {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+        } catch {
+          showToast("Could not save tasks in this browser.");
+        }
+      }
+
+      function formatDate(date) {
+        return new Intl.DateTimeFormat(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" }).format(date);
+      }
+
+      function formatDue(date) {
+        return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(date);
+      }
+
+      function escapeHTML(value) {
+        return String(value).replace(/[&<>"']/g, character => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+      }
+
+      function taskStatus(task, now = Date.now()) {
+        if (!task.due || task.done) return "";
+        const delta = new Date(task.due).getTime() - now;
+        if (delta < 0) return "overdue";
+        if (delta <= NEAR_DEADLINE_MS) return "soon";
+        return "";
+      }
+
+      function render() {
+        const visible = tasks.filter(task => filter === "all" || (filter === "active" ? !task.done : task.done));
+        taskList.innerHTML = visible.map(task => {
+          const status = taskStatus(task);
+          const dueDate = task.due ? new Date(task.due) : null;
+          const dueLabel = dueDate && !Number.isNaN(dueDate.getTime())
+            ? `<span class="task-due ${status === "soon" || status === "overdue" ? `is-${status}` : ""}">${status === "overdue" ? "Overdue · " : status === "soon" ? "Due soon · " : "Due "}${escapeHTML(formatDue(dueDate))}</span>`
+            : "";
+          const priorityLabel = task.priority && task.priority !== "normal"
+            ? `<span class="priority ${task.priority === "high" ? "high" : ""}">${task.priority === "high" ? "High" : "Low"}</span>`
+            : "";
+          return `<li class="task-row ${task.done ? "is-done" : ""}" data-id="${escapeHTML(task.id)}">
+            <button class="task-check" type="button" data-action="toggle" aria-label="${task.done ? "Mark incomplete" : "Mark complete"}: ${escapeHTML(task.title)}" aria-pressed="${task.done}"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m3 8 3 3 7-7"/></svg></button>
+            <div class="task-copy"><div class="task-title">${escapeHTML(task.title)}</div>${dueLabel}</div>
+            ${priorityLabel}
+            <button class="delete-button" type="button" data-action="delete" aria-label="Delete ${escapeHTML(task.title)}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18M8 6V4h8v2m3 0-1 14H6L5 6m4 4v6m6-6v6"/></svg></button>
+          </li>`;
+        }).join("");
+
+        emptyState.hidden = visible.length !== 0;
+        document.getElementById("emptyTitle").textContent = tasks.length === 0 ? "A fresh page." : filter === "done" ? "Nothing checked off yet." : "All caught up.";
+        document.getElementById("emptyMessage").textContent = tasks.length === 0 ? "Add a task and make a little progress." : filter === "done" ? "Finished tasks will find their way here." : "No tasks in this view. Enjoy the breathing room.";
+
+        const completed = tasks.filter(task => task.done).length;
+        const total = tasks.length;
+        document.getElementById("progressText").textContent = `${completed} of ${total}`;
+        document.getElementById("progressFill").style.width = `${total ? (completed / total) * 100 : 0}%`;
+        document.querySelectorAll(".filter-button").forEach(button => {
+          button.setAttribute("aria-pressed", String(button.dataset.filter === filter));
+        });
+        renderAlerts();
+      }
+
+      function showToast(message) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.add("is-visible");
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => toast.classList.remove("is-visible"), 3000);
+      }
+
+      function getAlertedIds() {
+        try {
+          const saved = JSON.parse(localStorage.getItem(ALERTED_KEY) || "[]");
+          return new Set(Array.isArray(saved) ? saved : []);
+        } catch {
+          return new Set();
+        }
+      }
+
+      function renderAlerts() {
+        const urgent = tasks.filter(task => taskStatus(task) && taskStatus(task) !== "" && taskStatus(task) !== "overdue");
+        const overdue = tasks.filter(task => taskStatus(task) === "overdue");
+        const banner = document.getElementById("alertBanner");
+        if (urgent.length || overdue.length) {
+          const items = [];
+          if (overdue.length) items.push(`<strong>${overdue.length} overdue ${overdue.length === 1 ? "task" : "tasks"}</strong>`);
+          if (urgent.length) items.push(`<strong>${urgent.length} ${urgent.length === 1 ? "deadline" : "deadlines"} coming up within 24 hours</strong>`);
+          document.getElementById("alertText").innerHTML = `${items.join(" · ")} — take a look at your list.`;
+          banner.classList.add("is-visible");
+        } else {
+          banner.classList.remove("is-visible");
+        }
+
+        if (typeof Notification === "undefined" || Notification.permission !== "granted") return;
+        const alerted = getAlertedIds();
+        const newlyUrgent = tasks.filter(task => taskStatus(task) === "soon" && !alerted.has(task.id));
+        if (!newlyUrgent.length) return;
+        newlyUrgent.forEach(task => alerted.add(task.id));
+        try { localStorage.setItem(ALERTED_KEY, JSON.stringify([...alerted])); } catch { /* Notifications still work for this session. */ }
+        const title = newlyUrgent.length === 1 ? "Deadline coming up" : `${newlyUrgent.length} deadlines coming up`;
+        const body = newlyUrgent.length === 1 ? `${newlyUrgent[0].title} is due within 24 hours.` : newlyUrgent.map(task => task.title).join(", ");
+        new Notification(title, { body, tag: `daymark-${newlyUrgent.map(task => task.id).join("-")}` });
+      }
+
+      taskForm.addEventListener("submit", event => {
+        event.preventDefault();
+        const title = taskInput.value.trim();
+        if (!title) {
+          taskInput.focus();
+          return;
+        }
+        const due = dueInput.value ? new Date(dueInput.value) : null;
+        if (due && Number.isNaN(due.getTime())) {
+          showToast("Please choose a valid deadline.");
+          return;
+        }
+        tasks.unshift({ id: globalThis.crypto?.randomUUID?.() || `${Date.now()}-${Math.random().toString(36).slice(2)}`, title, due: due ? due.toISOString() : null, priority, done: false, createdAt: new Date().toISOString() });
+        saveTasks();
+        taskInput.value = "";
+        dueInput.value = "";
+        taskInput.focus();
+        render();
+      });
+
+      taskList.addEventListener("click", event => {
+        const button = event.target.closest("button[data-action]");
+        if (!button) return;
+        const row = button.closest("[data-id]");
+        const task = tasks.find(item => item.id === row?.dataset.id);
+        if (!task) return;
+        if (button.dataset.action === "toggle") task.done = !task.done;
+        if (button.dataset.action === "delete") tasks = tasks.filter(item => item.id !== task.id);
+        saveTasks();
+        render();
+      });
+
+      document.querySelectorAll(".filter-button").forEach(button => {
+        button.addEventListener("click", () => {
+          filter = button.dataset.filter;
+          render();
+        });
+      });
+
+      document.querySelectorAll(".priority-option").forEach(button => {
+        button.addEventListener("click", () => {
+          priority = button.dataset.priority;
+          document.querySelectorAll(".priority-option").forEach(option => option.setAttribute("aria-pressed", String(option === button)));
+        });
+      });
+
+      notificationButton.addEventListener("click", async () => {
+        if (typeof Notification === "undefined") {
+          showToast("Browser notifications are not supported here.");
+          return;
+        }
+        if (Notification.permission === "granted") {
+          showToast("Reminders are on while Daymark is open.");
+          return;
+        }
+        if (Notification.permission === "denied") {
+          showToast("Notifications are blocked in your browser settings.");
+          return;
+        }
+        const permission = await Notification.requestPermission();
+        updateNotificationButton();
+        if (permission === "granted") {
+          showToast("Reminders are on while Daymark is open.");
+          renderAlerts();
+        } else {
+          showToast("Browser reminders were not enabled.");
+        }
+      });
+
+      function updateNotificationButton() {
+        const label = document.getElementById("notificationLabel");
+        label.textContent = typeof Notification !== "undefined" && Notification.permission === "granted" ? "Reminders on" : "Turn on reminders";
+      }
+
+      document.getElementById("todayLabel").textContent = formatDate(new Date());
+      updateNotificationButton();
+      render();
+      setInterval(() => {
+        document.getElementById("todayLabel").textContent = formatDate(new Date());
+        render();
+      }, 60 * 1000);
+    })();
+  </script>
+</body>
+</html>
